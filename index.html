@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAir | AI Pollution Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-dark: #1a1a2e;
+            --primary-blue: #16213e;
+            --accent-blue: #0f3460;
+            --neon-blue: #00b4d8;
+            --neon-green: #00cc88;
+            --neon-purple: #9d4edd;
+            --neon-red: #e63946;
+            --text-light: #e9ecef;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+       body {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 50%, var(--accent-blue) 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-light);
+    height: 100vh;
+    overflow: hidden;
+}
+
+        
+        .app-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 80px 1fr;
+    grid-template-areas: 
+        "sidebar header"
+        "sidebar main";
+    height: 100vh;
+    overflow: hidden; /* Prevent double scroll */
+}
+
+        
+        .app-header {
+            grid-area: header;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+       .app-sidebar {
+    grid-area: sidebar;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid var(--glass-border);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+        
+        .nav-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--neon-blue);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: var(--glass-bg);
+            color: var(--neon-blue);
+            transform: translateX(5px);
+        }
+      .app-main {
+    grid-area: main;
+    position: absolute;
+    top: 80px;             /* below fixed header */
+    left: 280px;           /* right of fixed sidebar */
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;      /* scroll only the main area */
+    padding: 2rem;
+    background: transparent;
+}
+
+
+        
+        .content-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--neon-blue);
+        }
+        
+        /* IMPROVED FORM CONTROLS - Better visibility while matching theme */
+        .form-control, .form-select {
+            width: 100%;
+            background: rgba(22, 33, 62, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+            background: rgba(26, 26, 46, 0.9);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-select option {
+            background: var(--primary-blue);
+            color: var(--text-light);
+            padding: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 180, 216, 0.4);
+        }
+        
+        .graph-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            min-height: 500px;
+            position: relative;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .pollution-indicators {
+            display: flex;
+            gap: 10px;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        
+        /* IMPROVED POLLUTION INDICATORS - Added values */
+        .pollution-level {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 140px;
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .pollution-level.active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pollution-level .level-name {
+            font-size: 0.9rem;
+        }
+        
+        .pollution-level .level-range {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .pollution-good {
+            background: linear-gradient(135deg, var(--neon-green), #00a878);
+            color: white;
+        }
+        
+        .pollution-moderate {
+            background: linear-gradient(135deg, #ffd166, #f9a620);
+            color: white;
+        }
+        
+        .pollution-poor {
+            background: linear-gradient(135deg, #f8961e, #e76f51);
+            color: white;
+        }
+        
+        .pollution-very-poor {
+            background: linear-gradient(135deg, #e63946, #d00000);
+            color: white;
+        }
+        
+        .pollution-severe {
+            background: linear-gradient(135deg, var(--neon-purple), #7209b7);
+            color: white;
+        }
+        
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .chatbot-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+        
+        .chatbot-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 400px;
+            height: 600px;
+            background: var(--primary-blue);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .chatbot-header {
+            background: var(--card-bg);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .bot-message {
+            background: var(--glass-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .chatbot-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .chatbot-input input {
+            flex: 1;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px 15px;
+            outline: none;
+            color: var(--text-light);
+        }
+        
+        .chatbot-input button {
+            background: var(--neon-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .suggestion-chip {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .suggestion-chip:hover {
+            background: var(--neon-blue);
+            transform: translateY(-2px);
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 50px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            width: 200px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .alert-modal-content {
+            background: var(--primary-blue);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .graph-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .graph-action-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-light);
+        }
+
+        /* Chatbase iframe styles */
+        .chatbase-iframe-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        .chatbase-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        /* Social Awareness & Safety Tips Styles */
+        .tips-container {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .tip-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .tip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tip-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .tip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+        }
+        
+        .tip-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .tip-content {
+            line-height: 1.6;
+        }
+        
+        .tip-content ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0;
+        }
+        
+        .tip-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "header"
+                    "main";
+            }
+            
+            .app-sidebar {
+                display: none;
+            }
+            
+            .control-group {
+                grid-template-columns: 1fr;
+            }
+
+            .chatbot-window {
+                width: 350px;
+                height: 500px;
+            }
+            
+            .pollution-level {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chatbot-window {
+                width: 300px;
+                height: 450px;
+                right: 10px;
+            }
+            
+            .pollution-level {
+                min-width: 100px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-title">
+                <i class="fas fa-wind"></i>
+                Predictive Analysis & Reduction of Industrial Pollution
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="setEmailAlert()">
+                    <i class="fas fa-bell"></i> Set Alerts
+                </button>
+                <button class="btn-primary" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i> Fullscreen
+                </button>
+            </div>
+        </header>
+        
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="logo-text">SmartAir</div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Dashboard</div>
+                <button class="nav-item active" onclick="switchTab('analytics')">
+                    <i class="fas fa-chart-line"></i>
+                    Pollution Analytics
+                </button>
+                <button class="nav-item" onclick="switchTab('comparison')">
+                    <i class="fas fa-city"></i>
+                    City Comparison
+                </button>
+                <!-- CHANGED: Historical Data to Social Awareness & Safety Tips -->
+                <button class="nav-item" onclick="switchTab('awareness')">
+                    <i class="fas fa-heart"></i>
+                    Social Awareness & Safety Tips
+                </button>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Analysis</div>
+                <button class="nav-item" onclick="showAnalysis('industrial')">
+                    <i class="fas fa-industry"></i>
+                    Industrial Impact
+                </button>
+                <button class="nav-item" onclick="showAnalysis('vehicular')">
+                    <i class="fas fa-car"></i>
+                    Vehicular Impact
+                </button>
+                <button class="nav-item" onclick="showAnalysis('weather')">
+                    <i class="fas fa-wind"></i>
+                    Weather Correlation
+                </button>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Solutions</div>
+                <button class="nav-item" onclick="showSolution('sol-gel')">
+                    <i class="fas fa-flask"></i>
+                    Sol-Gel Technology
+                </button>
+                <button class="nav-item" onclick="showSolution('green')">
+                    <i class="fas fa-seedling"></i>
+                    Green Initiatives
+                </button>
+                <button class="nav-item" onclick="showSolution('impact')">
+                    <i class="fas fa-chart-pie"></i>
+                    Impact Analysis
+                </button>
+            </div>
+        </aside>
+        
+        <main class="app-main">
+            <!-- Pollution Analytics Content -->
+            <div id="analyticsContent">
+                <div class="content-header">
+                    <div>
+                        <h1 class="page-title">Pollution Analytics Dashboard</h1>
+                        <p class="page-subtitle">Real-time monitoring and predictive analysis of industrial pollution levels</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" id="statsContainer">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="stat-value" id="currentPollution">-</div>
+                        <div class="stat-title">Current Pollution Level</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-green), #00a878);">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="stat-value text-success" id="reducedPollution">-</div>
+                        <div class="stat-title">With Sol-Gel Tech</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ffd166, #f9a620);">
+                            <i class="fas fa-chart-line-down"></i>
+                        </div>
+                        <div class="stat-value text-info" id="reductionPercent">-</div>
+                        <div class="stat-title">Pollution Reduction</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-purple), #7209b7);">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="stat-value text-warning" id="modelAccuracy">-</div>
+                        <div class="stat-title">Model Accuracy</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-sliders-h"></i> Analysis Controls</h3>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <select class="form-select" id="city">
+                                <option value="mumbai">Mumbai</option>
+                                <option value="delhi">Delhi</option>
+                                <option value="comparison">Compare Both Cities</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Analysis Type</label>
+                            <select class="form-select" id="analysisType">
+                                <option value="yearly">Yearly Trends (2021-2028)</option>
+                                <option value="monthly">Monthly Pattern</option>
+                                <option value="daily">Daily Analysis</option>
+                                <option value="hourly">Hourly Analysis</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="yearInput">
+                            <label class="form-label">Year</label>
+                            <input type="number" class="form-control" id="year" min="2021" max="2028" value="2024">
+                        </div>
+
+                        <div class="form-group" id="monthInput" style="display: none;">
+                            <label class="form-label">Month</label>
+                            <select class="form-select" id="month">
+                                <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+                                <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                                <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                                <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="dayInput" style="display: none;">
+                            <label class="form-label">Day</label>
+                            <input type="number" class="form-control" id="day" min="1" max="31" value="15">
+                        </div>
+                        
+                        <div class="form-group d-flex align-items-end">
+                            <button class="btn-primary w-100" onclick="generateGraph()">
+                                <i class="fas fa-chart-line"></i> Generate Analysis
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- IMPROVED: Pollution indicators with values -->
+                    <div class="pollution-indicators">
+                        <div class="pollution-level pollution-good active" data-level="good">
+                            <div class="level-name"><i class="fas fa-smile"></i> Good</div>
+                            <div class="level-range">0-50 AQI</div>
+                        </div>
+                        <div class="pollution-level pollution-moderate" data-level="moderate">
+                            <div class="level-name"><i class="fas fa-meh"></i> Moderate</div>
+                            <div class="level-range">51-100 AQI</div>
+                        </div>
+                        <div class="pollution-level pollution-poor" data-level="poor">
+                            <div class="level-name"><i class="fas fa-frown"></i> Poor</div>
+                            <div class="level-range">101-200 AQI</div>
+                        </div>
+                        <div class="pollution-level pollution-very-poor" data-level="very-poor">
+                            <div class="level-name"><i class="fas fa-sad-tear"></i> Very Poor</div>
+                            <div class="level-range">201-300 AQI</div>
+                        </div>
+                        <div class="pollution-level pollution-severe" data-level="severe">
+                            <div class="level-name"><i class="fas fa-dizzy"></i> Severe</div>
+                            <div class="level-range">300+ AQI</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="graph-container">
+                    <div class="graph-actions">
+                        <button class="graph-action-btn" onclick="downloadGraph()">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                        <button class="graph-action-btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                        <button class="graph-action-btn" onclick="setEmailAlert()">
+                            <i class="fas fa-bell"></i> Set Alert
+                        </button>
+                    </div>
+                    <!-- Topic Information Display -->
+                    <div class="card" id="infoContainer" style="display:none;">
+                      <div class="card-header">
+                        <h3 class="card-title" id="infoTitle"><i class="fas fa-info-circle"></i> Topic Information</h3>
+                      </div>
+                      <div class="card-body" id="infoContent">
+                        <!-- Dynamic content will appear here -->
+                      </div>
+                    </div>
+
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner"></div>
+                        <p>Training ML model and generating predictions...</p>
+                    </div>
+                    <div id="graph" style="width: 100%; height: 500px;"></div>
+                </div>
+                
+                <div class="stats-grid" id="comparisonStatsContainer" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-blue), #2980b9);">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <div class="stat-value" id="mumbaiCurrent">-</div>
+                        <div class="stat-title">Mumbai - Current</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-green), #00a878);">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="stat-value text-success" id="mumbaiReduced">-</div>
+                        <div class="stat-title">Mumbai - With Sol-Gel</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-red), #c0392b);">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <div class="stat-value" id="delhiCurrent">-</div>
+                        <div class="stat-title">Delhi - Current</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--neon-green), #00a878);">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="stat-value text-success" id="delhiReduced">-</div>
+                        <div class="stat-title">Delhi - With Sol-Gel</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Awareness & Safety Tips Content -->
+            <div id="awarenessContent" style="display: none;">
+                <div class="content-header">
+                    <div>
+                        <h1 class="page-title">Social Awareness & Safety Tips</h1>
+                        <p class="page-subtitle">Protect yourself and others from air pollution with these essential tips</p>
+                    </div>
+                </div>
+                
+                <div class="tips-container" id="tipsContainer">
+                    <div class="tip-card">
+                        <div class="tip-header">
+                            <div class="tip-icon">
+                                <i class="fas fa-mask"></i>
+                            </div>
+                            <h3 class="tip-title">Wear Protective Masks</h3>
+                        </div>
+                        <div class="tip-content">
+                            <p>When pollution levels are high, wearing a proper mask can significantly reduce your exposure to harmful particles:</p>
+                            <ul>
+                                <li>Use N95 or N99 masks for maximum protection</li>
+                                <li>Ensure proper fit with no gaps around the edges</li>
+                                <li>Replace masks regularly as per manufacturer instructions</li>
+                                <li>Avoid using cloth masks as they offer limited protection against PM2.5</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-card">
+                        <div class="tip-header">
+                            <div class="tip-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <h3 class="tip-title">Improve Indoor Air Quality</h3>
+                        </div>
+                        <div class="tip-content">
+                            <p>Create a safe indoor environment with these measures:</p>
+                            <ul>
+                                <li>Use air purifiers with HEPA filters</li>
+                                <li>Keep windows closed during high pollution periods</li>
+                                <li>Add indoor plants that naturally purify air</li>
+                                <li>Regularly clean and vacuum to reduce dust accumulation</li>
+                                <li>Avoid smoking or burning incense indoors</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-card">
+                        <div class="tip-header">
+                            <div class="tip-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <h3 class="tip-title">Reduce Personal Pollution Contribution</h3>
+                        </div>
+                        <div class="tip-content">
+                            <p>Everyone can help reduce air pollution through simple lifestyle changes:</p>
+                            <ul>
+                                <li>Use public transportation or carpool when possible</li>
+                                <li>Walk or cycle for short distances</li>
+                                <li>Maintain your vehicle with regular servicing</li>
+                                <li>Switch to electric vehicles if possible</li>
+                                <li>Avoid unnecessary idling of vehicles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Updated Chatbot Container with Chatbase Integration -->
+    <div class="chatbot-container">
+        <div class="chatbot-button" id="chatbotButton">
+            <i class="fas fa-robot"></i>
+            <div class="notification-badge" id="chatNotification" style="display: none;">1</div>
+        </div>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <span>SmartAir AI Assistant</span>
+                <i class="fas fa-times" id="closeChatbot"></i>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chatbase-loading">
+                    <div class="spinner"></div>
+                    <p>Loading AI Assistant...</p>
+                </div>
+            </div>
+            <div class="chatbot-input" style="display: none;">
+                <input type="text" id="chatInput" placeholder="Type your message...">
+                <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <script>
+    const BACKEND_ENDPOINT = 'http://localhost:5000/api/predict';
+    const CHATBOT_ENDPOINT = 'http://localhost:5000/api/chatbot';
+    const CHATBASE_URL = 'https://www.chatbase.co/chatbot-iframe/eMCzsWfY19R61-GpXi8LY';
+
+    // Chatbase integration
+    let chatbaseIframe = null;
+    let isChatbaseLoaded = false;
+
+    document.getElementById('analysisType').addEventListener('change', function() {
+        const type = this.value;
+        document.getElementById('yearInput').style.display = type === 'yearly' ? 'none' : 'block';
+        document.getElementById('monthInput').style.display = (type === 'monthly' || type === 'daily' || type === 'hourly') ? 'block' : 'none';
+        document.getElementById('dayInput').style.display = type === 'hourly' ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.pollution-level').forEach(level => {
+        level.addEventListener('click', function() {
+            document.querySelectorAll('.pollution-level').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            filterGraphByPollutionLevel(this.dataset.level);
+        });
+    });
+
+    // Updated chatbot toggle function
+    document.getElementById('chatbotButton').addEventListener('click', function() {
+        const chatbotWindow = document.getElementById('chatbotWindow');
+        const isVisible = chatbotWindow.style.display === 'flex';
+        
+        chatbotWindow.style.display = isVisible ? 'none' : 'flex';
+        document.getElementById('chatNotification').style.display = 'none';
+        
+        // Load Chatbase iframe when first opened
+        if (!isVisible && !isChatbaseLoaded) {
+            loadChatbaseIframe();
+        }
+    });
+
+    document.getElementById('closeChatbot').addEventListener('click', function() {
+        document.getElementById('chatbotWindow').style.display = 'none';
+    });
+
+    function loadChatbaseIframe() {
+        const messagesContainer = document.getElementById('chatbotMessages');
+        messagesContainer.innerHTML = `
+            <iframe 
+                src="${CHATBASE_URL}" 
+                class="chatbase-iframe-container"
+                frameborder="0"
+                allow="microphone"
+                id="chatbaseFrame"
+            ></iframe>
+        `;
+        
+        chatbaseIframe = document.getElementById('chatbaseFrame');
+        isChatbaseLoaded = true;
+        
+        // Add event listener for iframe load
+        chatbaseIframe.onload = function() {
+            console.log('Chatbase iframe loaded successfully');
+        };
+    }
+
+    // Tab switching function
+    function switchTab(tab) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (tab === 'analytics') {
+            document.getElementById('analyticsContent').style.display = 'block';
+            document.getElementById('awarenessContent').style.display = 'none';
+            if (document.getElementById('city').value === 'comparison') {
+                document.getElementById('city').value = 'mumbai';
+            }
+            generateGraph();
+        } else if (tab === 'comparison') {
+            document.getElementById('analyticsContent').style.display = 'block';
+            document.getElementById('awarenessContent').style.display = 'none';
+            document.getElementById('city').value = 'comparison';
+            generateGraph();
+        } else if (tab === 'awareness') {
+            document.getElementById('analyticsContent').style.display = 'none';
+            document.getElementById('awarenessContent').style.display = 'block';
+            document.getElementById('tipsContainer').style.display = 'block';
+        }
+    }
+
+    // ALL ORIGINAL FUNCTIONS REMAIN EXACTLY THE SAME - NO CHANGES
+    async function generateGraph() {
+        const city = document.getElementById('city').value;
+        const analysisType = document.getElementById('analysisType').value;
+        const year = parseInt(document.getElementById('year').value);
+        const month = parseInt(document.getElementById('month').value);
+        const day = parseInt(document.getElementById('day').value);
+
+        if (year < 2021 || year > 2028) {
+            alert('Please enter a year between 2021 and 2028');
+            return;
+        }
+
+        document.getElementById('loadingSpinner').style.display = 'block';
+        document.getElementById('statsContainer').style.display = 'none';
+        document.getElementById('comparisonStatsContainer').style.display = 'none';
+
+        try {
+            if (city === 'comparison') {
+                const [mumbaiResult, delhiResult] = await Promise.all([
+                    makeBackendCall('mumbai', analysisType, year, month, day),
+                    makeBackendCall('delhi', analysisType, year, month, day)
+                ]);
+                
+                if (mumbaiResult.error || delhiResult.error) throw new Error(mumbaiResult.error || delhiResult.error);
+                
+                displayComparisonGraph(mumbaiResult, delhiResult, analysisType, year, month, day);
+                updateComparisonStatistics(mumbaiResult, delhiResult);
+                
+            } else {
+                const result = await makeBackendCall(city, analysisType, year, month, day);
+                if (result.error) throw new Error(result.error);
+                
+                window.currentGraphData = result.predictions;
+                window.currentCity = city;
+                window.currentAnalysisType = analysisType;
+                window.currentYear = year;
+                window.currentMonth = month;
+                window.currentDay = day;
+                
+                displayGraph(result.predictions, analysisType, year, month, day, city);
+                updateStatistics({
+                    currentPollution: result.current_pollution,
+                    reducedPollution: result.reduced_pollution,
+                    reductionPercent: result.reduction_percent,
+                    modelAccuracy: result.model_accuracy
+                });
+            }
+            
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            alert('Error: ' + error.message);
+        }
+    }
+
+    async function makeBackendCall(city, analysisType, year, month, day) {
+        const payload = { city, analysis_type: analysisType, year, month, day };
+        try {
+            const response = await fetch(BACKEND_ENDPOINT, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`API call failed:`, error);
+            throw error;
+        }
+    }
+
+    function displayGraph(graphData, analysisType, year, month, day, city) {
+        let xValues, title, xTitle;
+
+        if (analysisType === 'yearly') {
+            xValues = graphData.map(d => d.year);
+            title = `${city.charAt(0).toUpperCase() + city.slice(1)} - Yearly Industrial Pollution Trends (2021-2028)<br>ML Forecasting - 30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Year';
+        } else if (analysisType === 'monthly') {
+            xValues = graphData.map(d => d.month);
+            title = `${city.charAt(0).toUpperCase() + city.slice(1)} - Monthly Industrial Pollution Pattern - ${year}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Month';
+        } else if (analysisType === 'daily') {
+            xValues = graphData.map(d => d.day);
+            const monthName = new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+            title = `${city.charAt(0).toUpperCase() + city.slice(1)} - Daily Industrial Pollution - ${monthName} ${year}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Day of Month';
+        } else if (analysisType === 'hourly') {
+            xValues = graphData.map(d => d.hour);
+            const dateStr = new Date(year, month - 1, day).toLocaleDateString();
+            title = `${city.charAt(0).toUpperCase() + city.slice(1)} - Hourly Industrial Pollution - ${dateStr}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Time of Day';
+        }
+
+        const trace1 = {
+            x: xValues,
+            y: graphData.map(d => d.without_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Without Sol-Gel',
+            line: { color: '#e74c3c', width: 4, shape: 'spline' },
+            marker: { size: 8, symbol: 'circle' }
+        };
+
+        const trace2 = {
+            x: xValues,
+            y: graphData.map(d => d.with_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'With Sol-Gel',
+            line: { color: '#27ae60', width: 4, shape: 'spline' },
+            marker: { size: 8, symbol: 'circle' }
+        };
+
+       const layout = {
+            title: { text: title, font: { size: 16, color: 'white' } },
+            xaxis: { 
+                title: { text: xTitle, font: { size: 14, color: 'white' } },
+                tickfont: { color: 'white' }
+            },
+            yaxis: { 
+                title: { text: 'Pollution Level (AQI)', font: { size: 14, color: 'white' } },
+                tickfont: { color: 'white' }
+            },
+            hovermode: 'closest',
+            showlegend: true,
+            legend: { x: 0, y: 1.1, orientation: 'h', font: { color: 'white' } },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Arial, sans-serif', color: 'white' },
+            margin: { l: 60, r: 40, b: 80, t: 80, pad: 10 }
+        };
+
+        Plotly.newPlot('graph', [trace1, trace2], layout, { responsive: true });
+        document.getElementById('statsContainer').style.display = 'flex';
+    }
+
+    function displayComparisonGraph(mumbaiResult, delhiResult, analysisType, year, month, day) {
+        let xValues, title, xTitle;
+        let traces = [];
+
+        if (analysisType === 'yearly') {
+            xValues = mumbaiResult.predictions.map(d => d.year);
+            title = `Mumbai vs Delhi - Yearly Industrial Pollution Trends (2021-2028)<br>ML Forecasting - 30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Year';
+        } else if (analysisType === 'monthly') {
+            xValues = mumbaiResult.predictions.map(d => d.month);
+            title = `Mumbai vs Delhi - Monthly Industrial Pollution Pattern - ${year}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Month';
+        } else if (analysisType === 'daily') {
+            xValues = mumbaiResult.predictions.map(d => d.day);
+            const monthName = new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+            title = `Mumbai vs Delhi - Daily Industrial Pollution - ${monthName} ${year}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Day of Month';
+        } else if (analysisType === 'hourly') {
+            xValues = mumbaiResult.predictions.map(d => d.hour);
+            const dateStr = new Date(year, month - 1, day).toLocaleDateString();
+            title = `Mumbai vs Delhi - Hourly Industrial Pollution - ${dateStr}<br>30% Reduction with Sol-Gel Technology`;
+            xTitle = 'Time of Day';
+        }
+
+        traces.push({
+            x: xValues,
+            y: mumbaiResult.predictions.map(d => d.without_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Mumbai - Without Sol-Gel',
+            line: { color: '#3498db', width: 4, shape: 'spline' },
+            marker: { size: 8, symbol: 'circle' }
+        });
+
+        traces.push({
+            x: xValues,
+            y: mumbaiResult.predictions.map(d => d.with_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Mumbai - With Sol-Gel',
+            line: { color: '#2980b9', width: 4, shape: 'spline', dash: 'dot' },
+            marker: { size: 8, symbol: 'circle' }
+        });
+
+        traces.push({
+            x: xValues,
+            y: delhiResult.predictions.map(d => d.without_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Delhi - Without Sol-Gel',
+            line: { color: '#e74c3c', width: 4, shape: 'spline' },
+            marker: { size: 8, symbol: 'circle' }
+        });
+
+        traces.push({
+            x: xValues,
+            y: delhiResult.predictions.map(d => d.with_sol_gel),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Delhi - With Sol-Gel',
+            line: { color: '#c0392b', width: 4, shape: 'spline', dash: 'dot' },
+            marker: { size: 8, symbol: 'circle' }
+        });
+
+       const layout = {
+            title: { text: title, font: { size: 16, color: 'white' } },
+            xaxis: { 
+                title: { text: xTitle, font: { size: 14, color: 'white' } },
+                tickfont: { color: 'white' }
+            },
+            yaxis: { 
+                title: { text: 'Pollution Level (AQI)', font: { size: 14, color: 'white' } },
+                tickfont: { color: 'white' }
+            },
+            hovermode: 'closest',
+            showlegend: true,
+            legend: { x: 0, y: 1.1, orientation: 'h', font: { color: 'white' } },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Arial, sans-serif', color: 'white' },
+            margin: { l: 60, r: 40, b: 80, t: 80, pad: 10 }
+        };
+
+        Plotly.newPlot('graph', traces, layout, { responsive: true });
+        document.getElementById('comparisonStatsContainer').style.display = 'grid';
+    }
+
+    function updateStatistics(stats) {
+        document.getElementById('currentPollution').textContent = stats.currentPollution;
+        document.getElementById('reducedPollution').textContent = stats.reducedPollution;
+        document.getElementById('reductionPercent').textContent = stats.reductionPercent;
+        document.getElementById('modelAccuracy').textContent = stats.modelAccuracy;
+    }
+
+    function updateComparisonStatistics(mumbaiResult, delhiResult) {
+        document.getElementById('mumbaiCurrent').textContent = mumbaiResult.current_pollution;
+        document.getElementById('mumbaiReduced').textContent = mumbaiResult.reduced_pollution;
+        document.getElementById('delhiCurrent').textContent = delhiResult.current_pollution;
+        document.getElementById('delhiReduced').textContent = delhiResult.reduced_pollution;
+    }
+
+    function filterGraphByPollutionLevel(level) {
+        if (!window.currentGraphData) return;
+        alert(`Filtering by ${level} pollution level - This would filter the graph in a real implementation`);
+    }
+
+    // SIMPLIFIED ALERT FUNCTION - NO MODAL, DIRECT API CALL
+    async function triggerImmediateAlerts() {
+        try {
+            // Show loading state on the main "Set Alerts" button
+            const alertButton = document.querySelector('.header-actions .btn-primary');
+            const originalText = alertButton.innerHTML;
+            alertButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            alertButton.disabled = true;
+            
+            console.log("🚨 Sending immediate alert request...");
+            
+            const response = await fetch('http://localhost:5000/api/alerts/trigger', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            });
+            
+            const result = await response.json();
+            
+            // Restore button state
+            alertButton.innerHTML = originalText;
+            alertButton.disabled = false;
+            
+            if (response.ok) {
+                alert(`✅ ${result.message}\n\nPollution alerts have been sent to all subscribed users!`);
+            } else {
+                alert(`❌ Error: ${result.error}`);
+            }
+            
+        } catch (error) {
+            console.error('Error triggering alerts:', error);
+            
+            // Restore button state on error
+            const alertButton = document.querySelector('.header-actions .btn-primary');
+            alertButton.innerHTML = '<i class="fas fa-bell"></i> Set Alerts';
+            alertButton.disabled = false;
+            
+            alert('❌ Failed to send alerts. Please ensure:\n• Backend is running on port 5000\n• Email credentials are configured\n• city_emails.csv file exists');
+        }
+    }
+
+    // Simple function that directly triggers alerts
+    function setEmailAlert() {
+        triggerImmediateAlerts();
+    }
+
+    // Analysis and Solution functions
+    let lastOpenedSection = null;
+
+    function showAnalysis(type) {
+        const infoContainer = document.getElementById('infoContainer');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoContent = document.getElementById('infoContent');
+
+        // Toggle close if clicked again
+        if (lastOpenedSection === type && infoContainer.style.display === 'block') {
+            infoContainer.style.display = 'none';
+            lastOpenedSection = null;
+            return;
+        }
+
+        // Otherwise show content
+        infoContainer.style.display = 'block';
+        lastOpenedSection = type;
+
+        if (type === 'industrial') {
+            infoTitle.innerHTML = '<i class="fas fa-industry"></i> Industrial Impact';
+            infoContent.innerHTML = `
+                <p>Industries are major sources of pollutants like SO₂, NOₓ, and PM2.5 due to fuel combustion and manufacturing processes.</p>
+                <ul>
+                    <li><strong>Key Sources:</strong> Factories, power plants, refineries</li>
+                    <li><strong>Impact:</strong> Increased particulate matter and smog formation</li>
+                    <li><strong>Solutions:</strong> Emission monitoring, Sol-Gel filters, clean energy transition</li>
+                </ul>
+            `;
+        } 
+        else if (type === 'vehicular') {
+            infoTitle.innerHTML = '<i class="fas fa-car"></i> Vehicular Impact';
+            infoContent.innerHTML = `
+                <p>Vehicle emissions are a major contributor to city air pollution, especially during rush hours.</p>
+                <ul>
+                    <li><strong>Pollutants:</strong> CO, NOₓ, PM2.5, hydrocarbons</li>
+                    <li><strong>Peak Hours:</strong> 8–9 AM and 5–7 PM</li>
+                    <li><strong>Remedies:</strong> Electric vehicles, carpooling, better traffic management</li>
+                </ul>
+            `;
+        }
+        else if (type === 'weather') {
+            infoTitle.innerHTML = '<i class="fas fa-wind"></i> Weather Correlation';
+            infoContent.innerHTML = `
+                <p>Weather plays a crucial role in the concentration and dispersion of air pollutants.</p>
+                <ul>
+    <li><strong>Winter:</strong> Highest pollution levels due to temperature inversion, fog, and slower air movement — pollutants get trapped near the ground.</li>
+    <li><strong>Summer:</strong> Moderate pollution; hot air spreads pollutants but increases ozone formation, causing smog and breathing issues.</li>
+    <li><strong>Monsoon:</strong> Lowest pollution levels — rain washes away dust and particulate matter, improving air quality.</li>
+    <li><strong>Post-Monsoon / Autumn:</strong> Sharp pollution increase due to crop residue burning, fireworks, and stable atmospheric conditions.</li>
+</ul>
+
+            `;
+        }
+
+        infoContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showSolution(type) {
+        const infoContainer = document.getElementById('infoContainer');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoContent = document.getElementById('infoContent');
+
+        // Toggle close if clicked again
+        if (lastOpenedSection === type && infoContainer.style.display === 'block') {
+            infoContainer.style.display = 'none';
+            lastOpenedSection = null;
+            return;
+        }
+
+        infoContainer.style.display = 'block';
+        lastOpenedSection = type;
+
+        if (type === 'sol-gel') {
+            infoTitle.innerHTML = '<i class="fas fa-flask"></i> Sol-Gel Technology';
+            infoContent.innerHTML = `
+                <p>Sol-Gel is a nanotechnology process that produces porous coatings capable of trapping pollutants.</p>
+                <ul>
+                    <li><strong>Principle:</strong> Transformation of a liquid sol into a solid gel.</li>
+                    <li><strong>Application:</strong> Air filters, catalytic coatings, pollution sensors.</li>
+                    <li><strong>Impact:</strong> Up to 30% reduction in industrial emissions.</li>
+                </ul>
+            `;
+        } 
+        else if (type === 'green') {
+            infoTitle.innerHTML = '<i class="fas fa-seedling"></i> Green Initiatives';
+            infoContent.innerHTML = `
+                <p>Green initiatives promote sustainable development and environmental protection.</p>
+                <ul>
+                    <li><strong>Urban Forestry:</strong> Trees absorb CO₂ and trap dust.</li>
+                    <li><strong>Clean Energy:</strong> Shift to solar, wind, and hydro power.</li>
+                    <li><strong>Public Awareness:</strong> Encourage sustainable transport and recycling.</li>
+                </ul>
+            `;
+        } 
+        else if (type === 'impact') {
+            infoTitle.innerHTML = '<i class="fas fa-chart-pie"></i> Impact Analysis';
+            infoContent.innerHTML = `
+                <p>The SmartAir model compares predicted and real data to estimate Sol-Gel's effect.</p>
+                <ul>
+                    <li><strong>Without Sol-Gel:</strong> High PM2.5 levels, low air quality.</li>
+                    <li><strong>With Sol-Gel:</strong> 30% drop in particulates, cleaner air.</li>
+                    <li><strong>Outcome:</strong> Significant improvement in AQI and public health.</li>
+                </ul>
+            `;
+        }
+
+        infoContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function downloadGraph() {
+        alert('Graph download functionality would be implemented here');
+    }
+    
+    function toggleFullscreen() {
+        const graphDiv = document.getElementById('graph');
+        if (!document.fullscreenElement) {
+            if (graphDiv.requestFullscreen) graphDiv.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
+
+    // Initialize the page
+    window.addEventListener('load', function() {
+        document.getElementById('analysisType').dispatchEvent(new Event('change'));
+        generateGraph();
+        setTimeout(() => {
+            document.getElementById('chatNotification').style.display = 'flex';
+        }, 5000);
+    });
+</script>
+</body>
+</html>

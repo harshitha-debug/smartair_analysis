@@ -1,0 +1,71 @@
+🌫️ General Air Pollution
+
+Q1: What is air pollution?
+A1: Air pollution is the presence of harmful substances in the atmosphere, such as gases, particulates, and biological molecules, which can harm human health and the environment.
+
+Q2: Which season has the highest air pollution?
+A2: Winter season usually has the highest pollution because of temperature inversion, low wind speeds, and increased burning activities.
+
+Q3: Which season has the lowest air pollution?
+A3: The rainy or monsoon season has the lowest air pollution, as rain helps wash away dust and pollutants from the air.
+
+Q4: What are the main causes of air pollution in Delhi?
+A4: Major causes include vehicle emissions, industrial pollution, construction dust, crop residue burning, and weather conditions that trap pollutants.
+
+Q5: How does rain help reduce air pollution?
+A5: Rain removes pollutants by capturing them in raindrops and carrying them down to the ground, a process called wet deposition.
+
+🏙️ City-Specific Questions (Based on Your Datasets)
+
+Q6: Which city has higher air pollution, Delhi or Mumbai?
+A6: Generally, Delhi has higher air pollution levels due to more vehicular and industrial emissions, crop burning, and weather conditions that trap pollutants.
+
+Q7: What does the dataset in SmartAir show?
+A7: The dataset shows air quality levels, pollution index values, and related environmental parameters for cities like Delhi and Mumbai.
+
+Q8: What does AQI mean?
+A8: AQI stands for Air Quality Index. It indicates how clean or polluted the air is, and what associated health effects might be of concern.
+
+Q9: What are safe AQI levels?
+A9: An AQI below 50 is considered good, 51–100 is moderate, and above 100 can cause health issues for sensitive groups.
+
+⚗️ Science & Technology (Sol-Gel & Solutions)
+
+Q10: What is sol-gel technology?
+A10: Sol-gel technology is a chemical process used to create solid materials from small molecules. It’s useful for making coatings, sensors, and nanomaterials for pollution control.
+
+Q11: How is sol-gel technology related to air pollution control?
+A11: Sol-gel coatings can be applied to surfaces or filters to absorb or break down pollutants like NOx and VOCs, improving air quality.
+
+Q12: What is the impact of sol-gel on environmental solutions?
+A12: Sol-gel helps create eco-friendly materials for sensors, catalysts, and coatings that reduce or detect air pollutants efficiently.
+
+🌡️ Environmental Awareness
+
+Q13: What are the health effects of air pollution?
+A13: Air pollution can cause respiratory diseases, heart problems, asthma, and reduced lung function.
+
+Q14: How can we reduce air pollution?
+A14: Use public transport, reduce burning of waste, plant trees, use clean energy sources, and follow emission standards.
+
+Q15: What is PM2.5 and PM10?
+A15: PM2.5 and PM10 are particulate matter with diameters less than 2.5 and 10 micrometers respectively. They can enter lungs and cause health problems.
+
+📊 Data & Insights
+
+Q16: How does SmartAir analyze pollution data?
+A16: It processes datasets for different cities, calculates AQI, and provides pollution trend insights based on real data.
+
+Q17: Can SmartAir predict air quality?
+A17: Yes, SmartAir can use historical data trends to estimate future air quality levels.
+
+Q18: How often should air quality be monitored?
+A18: Air quality should be monitored daily in urban areas to track changes and warn people when pollution rises.
+
+💬 Chatbot & Application Use
+
+Q19: What can the SmartAir chatbot do?
+A19: It can answer questions about air pollution, show city data, explain AQI levels, and give environmental awareness tips.
+
+Q20: How does SmartAir help people?
+A20: It educates users about pollution, helps them understand local air quality, and suggests ways to protect their health.
